@@ -1,0 +1,162 @@
+output_dir: data/out_26_healthy
+images: data/out_26_healthy/images
+use_gpu: true
+
+resources:
+  cpu:
+    partition: cpu_p
+    qos: cpu_normal
+    cpu: 18
+    gpu: 0
+    mem_mb: 250000
+  gpu:
+    partition: gpu_p
+    qos: gpu_normal
+    cpu: 24
+    gpu: 1
+    mem_mb: 250000
+
+defaults:
+  integration:
+    raw_counts: layers/counts
+    norm_counts: layers/normcounts
+    var_mask:  # Use var_masks generated from the script
+    # kick out wo markers
+    # kick out union probably
+      - integration_features_lineage_programs
+    #  - lineage_50
+    #  - lineage_100
+    #  - lineage_200
+    #  - lineage_400
+    #  - lineage_600
+    #  - HVG_L3_20
+    #  - HVG_L3_50
+    #  - HVG_L3_100
+    #  - HVG_L3_200
+    #  - HVG_L3_500
+    save_subset: false
+  datasets:
+    - object_healthy_new
+  batch:
+    - batch_covar_split
+    #- Dataset
+    # - another_batch_column  # Uncomment and add more columns as needed
+  umap_colors:
+    - Dataset
+    - ID
+    - batch_covar_split
+    - suspension_type
+    - Cell_Type_Harmonized
+  neighbors:
+    n_neighbors: 100
+
+DATASETS:
+  object_healthy_new:
+    input:
+      integration:
+        #all_datasets: /lustre/groups/ml01/workspace/hpca/data/20250130_adata_labelled_hvg_mask.zarr  # Preprocessed dataset
+        all_datasets: /lustre/groups/ml01/workspace/hpca/hpca_downstream/2026_final_object_healthy_hvg.h5ad
+      metrics: integration
+    integration:
+      label:
+        #- cell_states
+        - Level_4
+      batch: 
+       - batch_covar_split
+       #- Dataset
+      methods:
+        # Methods under Harmony
+        #harmony:
+        harmonypy:
+            sigma: 0.1
+            key: Dataset
+            n_comps:
+              - 10
+              - 30
+        #harmony_pytorch:
+        #   sigma: 0.1
+        #   batch_key: batch_covar_split
+        #   n_comps: 30
+        # Methods under scVI-tools
+        scvi:
+            n_hidden: 128
+            max_epochs: 50
+            early_stopping: true
+        #sysvi:
+        #  system_key: suspension_type
+        #  categorical_covariate_keys:
+        #    - batch_covar_split
+        #  early_stopping: true
+        drvi:
+            early_stopping: true
+            max_epochs: 50
+        scanvi:
+            max_epochs: 50
+            early_stopping: true
+            categorical_covariate_keys:
+              - batch_covar_split
+            n_layers: 4
+            n_latent: 20
+            # continuous_covariate_keys: #Add if necessary
+        # Methods under scArches
+        #scarches:
+        # scgen:
+        #    hidden_layer_sizes: [128, 128]
+        #    n_epochs: 100 # Not sure how many epochs scgen needs
+        #    early_stopping_kwargs:
+        #      early_stopping_metric: val_loss
+        #      patience: 20
+        #      threshold: 0
+        #      reduce_lr: true
+        #      lr_patience: 13
+        #      lr_factor: 0.1
+        scpoli:
+            cell_type_keys:
+              - Cell_Type_Harmonized
+            embedding_dims: 5
+            recon_loss: nb
+            n_epochs: 50
+            early_stopping_kwargs:
+              early_stopping_metric: val_prototype_loss
+              mode: min
+              threshold: 0
+              patience: 20
+              reduce_lr: true
+              lr_patience: 13
+              lr_factor: 0.1
+         # bbknn:
+         # neighbors_within_batch: 3 #not sure if this is the right value
+                # combat:
+                #   covariates:
+                #     - Dataset
+                # scanorama:
+                #   batch_size: 100
+    metrics:
+      unintegrated: layers/normcounts
+      raw_counts: layers/counts
+      var_mask: integration_features_lineage_programs
+      methods:
+         - nmi
+         - ari
+         - asw_label
+         - asw_batch
+         - cell_cycle
+        #- clisi
+        # - ilisi
+         - graph_connectivity
+         - isolated_label_asw
+         - isolated_label_f1
+         - pcr
+         - morans_i
+         # kbet_pg
+         # add morans i
+      label: 
+         - Level_4
+      batch:
+         # - assay
+         - batch_covar_split
+         - Dataset
+         - suspension_type
+          #unintegrated: X
+          #overwrite_file_id: true
+  

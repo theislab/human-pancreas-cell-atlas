@@ -1,0 +1,114 @@
+DATASETS:
+
+  batch_analysis_new:
+    input:
+      preprocessing:
+         Tabula_Sapiens: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/Tabula_Sapiens.h5ad
+         espace_whole: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/espace_snRNA_adult_whole.h5ad
+         espace_frozen: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/espace_snRNA_frozen_islets.h5ad
+         espace_cultured: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/espace_scRNA_cultured_islets.h5ad
+         GSE183568: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/GSE183568.h5ad
+         GSE150724: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/GSE150724.h5ad
+         HPAP: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/HPAP.h5ad
+         GSE84133_remapped: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/GSE84133_remapped.h5ad
+         GSE198623: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/GSE198623.h5ad
+         # GSE217837: /ictstr01/groups/ml01/workspace/hpca/data/GSE217837/GSE217837_concat.h5ad #no raw counts
+         GSE101207_remapped: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/GSE101207_remapped.h5ad
+         GSE114297_remapped: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/GSE114297_remapped.h5ad
+         charite_snRNA: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/charite_snRNA.h5ad
+         karakose: /lustre/groups/ml01/workspace/hpca/data/adata_datasets_meta/Karakose.h5ad
+      batch_analysis: preprocessing
+    preprocessing:
+      raw_counts: layers/counts
+      norm_counts: layers/normcounts
+      highly_variable_genes:
+        n_top_genes: 5000
+      assemble:
+        #- normalize
+        - highly_variable_genes
+        - pca
+      colors:
+        - sample_id
+        - ID
+        - donor_id
+        - institute
+        - library_id
+        - organism_ontology_term_id
+        - manner_of_death
+        - sample_source
+        - sex_ontology_term_id
+        - development_stage_ontology_term_id
+        - sample_collection_method
+        - tissue_type
+        - sampled_site_condition
+        - tissue_ontology_term_id
+        - sample_preservation_method
+        - suspension_type
+        - cell_enrichment
+        - assay_ontology_term_id
+        - library_preparation_batch
+        - library_sequencing_run
+        - sequenced_fragment
+        - is_primary_data
+        - reference_genome
+        - gene_annotation_version
+        - alignment_software
+    batch_analysis:
+      n_permutations: 20
+      sample: ID
+      covariates:
+        - sample_id
+        - ID
+        - donor_id
+        - institute
+        - library_id
+        - organism_ontology_term_id
+        - manner_of_death
+        - sample_source
+        - sex_ontology_term_id
+        - development_stage_ontology_term_id
+        - sample_collection_method
+        - tissue_type
+        - sampled_site_condition
+        - tissue_ontology_term_id
+        - sample_preservation_method
+        - suspension_type
+        - cell_enrichment
+        - assay_ontology_term_id
+        - library_preparation_batch
+        - library_sequencing_run
+        - sequenced_fragment
+        - is_primary_data
+        - reference_genome
+        - gene_annotation_version
+        - alignment_software
+
+resources:
+  cpu:
+    partition: cpu_p
+    qos: cpu_normal
+    gpu: 0
+    mem_mb: 300000
+#  gpu:
+#    partition: gpu_p
+#    qos: gpu_normal
+#    gpu: 1
+#    mem_mb: 140000
+
+output_dir: data/out
+images: data/out/images
+#use_gpu: true
+
+output_map:
+  merge: data/out/merge/dataset~{dataset}.zarr
+  qc: data/out/qc/dataset~{dataset}/file_id~{file_id}.zarr
+  clustering: data/out/clustering/dataset~{dataset}/file_id~{file_id}.zarr
+#  sample_representation: data/out/sample_representation/dataset~{dataset}/file_id~{file_id}/pseudobulk.zarr
+  split_data: data/out/split_data/dataset~{dataset}/file_id~{file_id}/key~{key}/value~{value}.zarr
+  relabel: data/out/relabel/dataset~{dataset}/file_id~{file_id}.zarr
+#  subset: data/out/subset/dataset~{dataset}/file_id~{file_id}/by_sample.zarr
+  pca: data/out/preprocessing/dataset~{dataset}/file_id~{file_id}/pca.zarr
+  neighbors: data/out/preprocessing/dataset~{dataset}/file_id~{file_id}/neighbors.zarr
+  preprocessing: data/out/preprocessing/dataset~{dataset}/file_id~{file_id}/preprocessed.zarr
+  integration: data/out/integration/dataset~{dataset}/file_id~{file_id}/batch~{batch}/method~{method}--hyperparams~{hyperparams}--label~{label}--output_type~{output_type}.zarr
+  metrics: data/out/metrics/results/per_dataset/{dataset}_metrics.tsv
